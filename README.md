@@ -64,7 +64,8 @@ xattr -dr com.apple.quarantine /Applications/Jiggler.app
 
 
 **Why is this needed?**
-This build is not code-signed with an Apple Developer certificate (costs $99/year). The app is safe and open-source - you're just telling macOS you trust it by using right-click → Open instead of double-clicking.
+This build is not code-signed with an Apple Developer certificate (costs $99/year). 
+The app is safe and open-source - you're just telling macOS you trust it by using right-click → Open instead of double-clicking.
 
 ### Permissions Required
 
