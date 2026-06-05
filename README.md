@@ -116,6 +116,7 @@ Need Jiggler to run for a specific duration?
 ### Version 1.13 (June 2026)
 - **Fixed:** Standard Jiggle under macOS Tahoe
 - **Updated:** Icons
+- **Improved:** permissions check on first use
 - **Improved:** nearby/far slider
 - **Improved:** nearby/far Jiggle
 
