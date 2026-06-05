@@ -76,15 +76,11 @@
                             <action selector="jiggleStyleChanged:" target="-2" id="DAq-8c-Gc0"/>
                         </connections>
                     </matrix>
-                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2BB-LS-ihS">
-                        <rect key="frame" x="206" y="95" width="20" height="20"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" image="apple" id="MoO-2W-fkd"/>
-                    </imageView>
+                    
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="JK7-je-yY2">
                         <rect key="frame" x="40" y="95" width="297" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <buttonCell key="cell" type="check" title="The screen is locked by       &gt; Lock Screen" bezelStyle="regularSquare" imagePosition="left" inset="2" id="ihF-hI-6LL">
+                        <buttonCell key="cell" type="check" title="The screen is locked by  &gt; Lock Screen" bezelStyle="regularSquare" imagePosition="left" inset="2" id="ihF-hI-6LL">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
