@@ -1,14 +1,17 @@
 # Jiggler
 **Jiggler** is a simple menu bar application that prevents your Mac from going to sleep, activating the screensaver, or dimming the display. Perfect for presentations, long downloads, video rendering, or any task where you need your Mac to stay awake without changing system settings.
 
+
 ## macOS Tahoe Edition
 
 This fork contains compatibility fixes for macOS Tahoe together with refreshed menu bar, overlay and application icons.
+
 
 ### Based on
 
 - bhaller/Jiggler
 - pjaol/Jiggler
+
 
 ## Features
 
@@ -38,6 +41,7 @@ Jiggler can automatically enable/disable based on:
 - **Overlay Window** - Optional visual indicator when jiggling is active
 - **Configurable Settings** - Adjust jiggle interval, distance, and conditions
 
+
 ## Installation
 
 ### Download
@@ -56,7 +60,9 @@ Jiggler can automatically enable/disable based on:
 5. Click **"Open"** in the security dialog
 
 If that is not working you can open a Terminal window and use the following code:
+
 xattr -dr com.apple.quarantine /Applications/Jiggler.app
+
 
 **Why is this needed?**
 This build is not code-signed with an Apple Developer certificate (costs $99/year). The app is safe and open-source - you're just telling macOS you trust it by using right-click → Open instead of double-clicking.
