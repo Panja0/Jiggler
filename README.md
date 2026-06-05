@@ -127,7 +127,6 @@ Need Jiggler to run for a specific duration?
 - General code and logic cleanup
 - Bug fixes for macOS 15 compatibility
 
-[Full changelog](https://github.com/pjaol/Jiggler/releases)
 
 ## License
 
