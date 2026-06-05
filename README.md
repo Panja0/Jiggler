@@ -6,6 +6,10 @@
 
 This fork contains compatibility fixes for macOS Tahoe together with refreshed menu bar, overlay and application icons.
 
+### Disclaimer
+
+I'm not a developer, I'm just an user who loved Jiggler and was frustrated it didn't work (well) on macOS Tahoe.
+Used AI to fix the issues.
 
 ### Based on
 
