@@ -1,4 +1,5 @@
 # Jiggler
+**Jiggler** is a simple menu bar application that prevents your Mac from going to sleep, activating the screensaver, or dimming the display. Perfect for presentations, long downloads, video rendering, or any task where you need your Mac to stay awake without changing system settings.
 
 ## macOS Tahoe Edition
 
@@ -8,9 +9,6 @@ This fork contains compatibility fixes for macOS Tahoe together with refreshed m
 
 - bhaller/Jiggler
 - pjaol/Jiggler
-
-
-**Jiggler** is a simple menu bar application that prevents your Mac from going to sleep, activating the screensaver, or dimming the display. Perfect for presentations, long downloads, video rendering, or any task where you need your Mac to stay awake without changing system settings.
 
 ## Features
 
