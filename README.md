@@ -60,7 +60,6 @@ Jiggler can automatically enable/disable based on:
 5. Click **"Open"** in the security dialog
 
 If that is not working you can open a Terminal window and use the following code:
-
 xattr -dr com.apple.quarantine /Applications/Jiggler.app
 
 
