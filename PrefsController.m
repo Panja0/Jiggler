@@ -63,7 +63,7 @@ static PrefsController *sharedPrefsController = nil;
 											
 											@"NO", ZenJiggleDefaultsKey,											// the default for the old key
 											[NSNumber numberWithInt:-1], JiggleStyleDefaultsKey,					// use -1 as a flag value for "no value set for the new key"
-                                            [NSNumber numberWithFloat:2], JiggleDistanceDefaultsKey,				// 0 was the old default in 1.7 and earlier, effectively
+                                            [NSNumber numberWithFloat:2], JiggleDistanceDefaultsKey,				// default step 2 = 6px movement
                                             
                                             @"NO", OnlyWithCPUUsageDefaultsKey,
                                             [NSNumber numberWithInt:20], CPUUsageThresholdDefaultsKey,
@@ -118,10 +118,10 @@ static PrefsController *sharedPrefsController = nil;
 			if ((jiggleStyle < 0) || (jiggleStyle > 2)) jiggleStyle = 0;
             
             jiggleDistance = [userDefaults floatForKey:JiggleDistanceDefaultsKey];
-			if (jiggleDistance < 0.0f)
-				jiggleDistance = 0.0f;
-			if (jiggleDistance > 20.0f)
-				jiggleDistance = 20.0f;
+			if (jiggleDistance < 1.0f)
+				jiggleDistance = 1.0f;
+			if (jiggleDistance > 5.0f)
+				jiggleDistance = 5.0f;
 			
 			onlyWithCPUUsage = [userDefaults boolForKey:OnlyWithCPUUsageDefaultsKey];
             cpuUsageThreshold = (int)[userDefaults integerForKey:CPUUsageThresholdDefaultsKey];
@@ -265,7 +265,12 @@ static PrefsController *sharedPrefsController = nil;
 
 - (int)jiggleDistance
 {
-	return (int)(jiggleDistance * jiggleDistance + 10);
+	// Steps 1-5 map to pixel distances: 10, 25, 60, 150, 400
+	static const int stepPixels[] = { 0, 10, 25, 60, 150, 400 };
+	int step = (int)roundf(jiggleDistance);
+	if (step < 1) step = 1;
+	if (step > 5) step = 5;
+	return stepPixels[step];
 }
 
 - (BOOL)onlyWithCPUUsage

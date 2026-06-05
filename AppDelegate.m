@@ -70,6 +70,78 @@ double JigglerIdleTime(void)
 
 @implementation AppDelegate
 
+
+- (NSImage *)mouseStatusBarImageWithSize:(CGFloat)size disabled:(BOOL)disabled
+{
+	// Prefer the SF Symbol requested by Marcel on macOS versions that have it.
+	// The selector is resolved at runtime so the project can keep its older deployment target.
+	SEL symbolSelector = NSSelectorFromString(@"imageWithSystemSymbolName:accessibilityDescription:");
+	if ([NSImage respondsToSelector:symbolSelector])
+	{
+		IMP imp = [NSImage methodForSelector:symbolSelector];
+		NSImage *(*symbolFactory)(id, SEL, NSString *, NSString *) = (void *)imp;
+		NSImage *symbolImage = symbolFactory([NSImage class], symbolSelector, @"computermouse.fill", @"Jiggler mouse status");
+		
+		if (symbolImage)
+		{
+			NSImage *image = [[[NSImage alloc] initWithSize:NSMakeSize(size, size)] autorelease];
+			[image lockFocus];
+			
+			NSRect drawRect = NSMakeRect(size * 0.09, size * 0.04, size * 0.82, size * 0.92);
+			[symbolImage drawInRect:drawRect fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0 respectFlipped:YES hints:nil];
+			
+			if (disabled)
+			{
+				// Make the inactive image a real grey bitmap instead of relying on button alpha.
+				// Template images are normalized by AppKit so alpha changes can look identical in the menu bar.
+				[[NSColor colorWithCalibratedWhite:0.56 alpha:1.0] set];
+				NSRectFillUsingOperation(NSMakeRect(0, 0, size, size), NSCompositingOperationSourceAtop);
+			}
+			
+			[image unlockFocus];
+			[image setTemplate:(!disabled)];
+			return image;
+		}
+	}
+	
+	// Fallback for macOS versions without SF Symbols.
+	NSImage *image = [[[NSImage alloc] initWithSize:NSMakeSize(size, size)] autorelease];
+	[image lockFocus];
+	
+	NSColor *iconColor = disabled ? [NSColor colorWithCalibratedWhite:0.56 alpha:1.0] : [NSColor blackColor];
+	[iconColor setStroke];
+	[iconColor setFill];
+	
+	CGFloat lineWidth = MAX(1.8, size / 10.0);
+	NSRect bodyRect = NSMakeRect(size * 0.28, size * 0.11, size * 0.44, size * 0.78);
+	NSBezierPath *bodyPath = [NSBezierPath bezierPathWithRoundedRect:bodyRect xRadius:size * 0.22 yRadius:size * 0.30];
+	[bodyPath fill];
+	
+	[[NSColor whiteColor] setFill];
+	NSRect innerRect = NSInsetRect(bodyRect, lineWidth, lineWidth);
+	NSBezierPath *innerPath = [NSBezierPath bezierPathWithRoundedRect:innerRect xRadius:size * 0.18 yRadius:size * 0.26];
+	[innerPath fill];
+	
+	[iconColor setStroke];
+	[iconColor setFill];
+	[bodyPath setLineWidth:lineWidth];
+	[bodyPath stroke];
+	
+	NSBezierPath *centerLine = [NSBezierPath bezierPath];
+	[centerLine setLineWidth:lineWidth];
+	[centerLine setLineCapStyle:NSRoundLineCapStyle];
+	[centerLine moveToPoint:NSMakePoint(NSMidX(bodyRect), NSMaxY(bodyRect) - size * 0.08)];
+	[centerLine lineToPoint:NSMakePoint(NSMidX(bodyRect), NSMaxY(bodyRect) - size * 0.27)];
+	[centerLine stroke];
+	
+	NSBezierPath *wheelPath = [NSBezierPath bezierPathWithOvalInRect:NSMakeRect(NSMidX(bodyRect) - size * 0.04, NSMaxY(bodyRect) - size * 0.37, size * 0.08, size * 0.12)];
+	[wheelPath fill];
+	
+	[image unlockFocus];
+	[image setTemplate:(!disabled)];
+	return image;
+}
+
 #pragma mark Launch and Termination
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -104,20 +176,15 @@ double JigglerIdleTime(void)
 	// Set up our status item
 	NSStatusBar *statusBar = [NSStatusBar systemStatusBar];
 	CGFloat barThickness = [statusBar thickness];
-	NSStatusItem *statusItem = [statusBar statusItemWithLength:NSSquareStatusItemLength];
+	NSStatusItem *statusItem = [statusBar statusItemWithLength:20.0];
 	
 	[statusItem setMenu:[self statusItemMenu]];
 	[self setStatusItem:statusItem];
 	
-	// Prepare our status item icon variants
-	NSImage *jigglerImage = [NSImage imageNamed:NSImageNameApplicationIcon];
-	
-	scaledJigglerImage = [jigglerImage copy];
-	
-	[scaledJigglerImage setSize:NSMakeSize(barThickness - 2, barThickness - 2)];
-	
-	scaledJigglerImageRed = [[scaledJigglerImage imageTintedWithColor:[NSColor colorWithCalibratedRed:1.0 green:0.0 blue:0.0 alpha:0.4]] retain];
-	scaledJigglerImageGreen = [[scaledJigglerImage imageTintedWithColor:[NSColor colorWithCalibratedRed:0.0 green:1.0 blue:0.0 alpha:0.3]] retain];
+	// Prepare separate status item mouse icons for active and inactive states.
+	// Both are template images so macOS renders them correctly for light or dark menu bars.
+	scaledJigglerImage = [[self mouseStatusBarImageWithSize:barThickness - 2 disabled:NO] retain];
+	scaledJigglerImageRed = [[self mouseStatusBarImageWithSize:barThickness - 2 disabled:YES] retain];
 	
 	[self fixStatusItemIcon];
 	
@@ -129,12 +196,10 @@ double JigglerIdleTime(void)
 	[self fixMasterSwitchUI];
 	
 	// Check that we have the Accessibility access we need; see https://stackoverflow.com/a/53617674/2752221
-	if (@available(macOS 15.0, *))
-	{
-		NSDictionary *opts = [NSDictionary dictionaryWithObjectsAndKeys:(id)kCFBooleanFalse, (id)kAXTrustedCheckOptionPrompt, nil];
-		(void)AXIsProcessTrustedWithOptions((CFDictionaryRef)opts);
-	}
-	else if (!AXIsProcessTrusted())
+	// BCH fix 2026: On macOS 15+ (including Tahoe 26), CGEventPost(kCGHIDEventTap,...) silently fails
+	// without Accessibility permission. We must check and handle the missing-permission case here,
+	// just like we do on older macOS versions.
+	if (!AXIsProcessTrusted())
 	{
 		NSModalResponse retval = SSRunCriticalAlertPanel(@"Turn on accessibility", @"Jiggler needs to control the mouse cursor to function.  To enable this capability, please select the Jiggler checkbox in Security & Privacy > Accessibility, and then restart Jiggler (which will quit now).", @"Turn On Accessibility", @"Quit", nil);
 		
@@ -174,22 +239,19 @@ double JigglerIdleTime(void)
 	// Fix the master switch menu item to be checked or unchecked
 	[_masterSwitchItem setState:(jiggleMasterSwitch ? NSControlStateValueOn : NSControlStateValueOff)];
 	
-	// Dim the status item icon if we are disabled
-	NSStatusBarButton *statusButton = [[self statusItem] button];
-	
-	[statusButton setAppearsDisabled:!jiggleMasterSwitch];
+	[self fixStatusItemIcon];
 }
 
 - (void)fixStatusItemIcon
 {
 	NSStatusBarButton *statusButton = [[self statusItem] button];
-	
-	if (timedQuitTimer)
-		[statusButton setImage:scaledJigglerImageRed];
-	else if (jigglingActive)
-		[statusButton setImage:scaledJigglerImageGreen];
-	else
-		[statusButton setImage:scaledJigglerImage];
+	BOOL showActiveIcon = (jiggleMasterSwitch && jigglingActive);
+
+	[statusButton setImage:scaledJigglerImage];
+	if ([statusButton respondsToSelector:@selector(setAppearsDisabled:)])
+		[statusButton setAppearsDisabled:!showActiveIcon];
+
+	[statusButton setNeedsDisplay:YES];
 }
 
 // Now that we use NSStatusItem, we show our timed quit timer in the Timed Quit menu item
@@ -323,7 +385,7 @@ double JigglerIdleTime(void)
 	// Figure out the distance scale we want to move over
 	int baseTolerance = [[PrefsController sharedPrefsController] jiggleDistance];
 	
-	if (baseTolerance < 10) baseTolerance = 10;
+	if (baseTolerance < 10) baseTolerance = 10;	// matches step 1 = 10px
 	if (baseTolerance > 410) baseTolerance = 410;
 	
 	// Find a suitable new mouse location.  A suitable location is sufficiently close to the last seen user-set mouse
@@ -370,7 +432,9 @@ double JigglerIdleTime(void)
         
         // move the mouse
         CGEventRef eventMoved = CGEventCreateMouseEvent(sourceRef, kCGEventMouseMoved, newLocation, kCGMouseButtonLeft);
-        CGEventPost(kCGHIDEventTap, eventMoved);    // kCGHIDEventTap ensures that everybody sees our posted event, no matter how low-level they are
+        // macOS 26 Tahoe fix: kCGHIDEventTap requires additional entitlements on Tahoe 26.3+ and silently
+        // fails without them. kCGSessionEventTap works correctly with just Accessibility permission.
+        CGEventPost(kCGSessionEventTap, eventMoved);
         
         // restore the old local event suppression period
         CGEventSourceSetLocalEventsSuppressionInterval(sourceRef, oldSuppressionInterval);
@@ -706,9 +770,10 @@ double JigglerIdleTime(void)
 					
                     if (click_down && click_up)
                     {
-                        CGEventPost(kCGHIDEventTap, click_down);
+                        // macOS 26 Tahoe fix: use kCGSessionEventTap (see comment in _jiggleMouse:)
+                        CGEventPost(kCGSessionEventTap, click_down);
                         usleep(10000);
-                        CGEventPost(kCGHIDEventTap, click_up);
+                        CGEventPost(kCGSessionEventTap, click_up);
                         
                         CFRelease(click_down);
                         CFRelease(click_up);
@@ -726,13 +791,13 @@ double JigglerIdleTime(void)
 				}
 				else	// jiggleStyle == 0, and bad values
 				{
-					// Standard jiggle: move the mouse a bunch of times
+					// Standard jiggle: a few small, subtle mouse moves
 					// Remember the current mouse point, so we can avoid hitting it exactly
 					[self _setJiggleAvoidPoint];
 					
-					// Schedule a bunch of mouse-moves
-					for (i = 0; i < 35; ++i)
-						[self performSelector:@selector(_jiggleMouse:) withObject:nil afterDelay:(double)i / 100.0 inModes:@[NSDefaultRunLoopMode, NSModalPanelRunLoopMode, NSEventTrackingRunLoopMode]];
+					// Schedule a small number of mouse-moves, spread over ~400ms so it looks natural
+					for (i = 0; i < 4; ++i)
+						[self performSelector:@selector(_jiggleMouse:) withObject:nil afterDelay:(double)i * 0.1 inModes:@[NSDefaultRunLoopMode, NSModalPanelRunLoopMode, NSEventTrackingRunLoopMode]];
 				}
 				
 				// This is shared functionality across all jiggle styles; it implements the base "zen jiggle"

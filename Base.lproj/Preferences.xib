@@ -327,7 +327,7 @@
                     <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gSu-Fg-P4O">
                         <rect key="frame" x="372" y="437" width="63" height="15"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <sliderCell key="cell" controlSize="small" continuous="YES" state="on" alignment="left" maxValue="20" tickMarkPosition="below" sliderType="linear" id="QG0-dO-6MW"/>
+                        <sliderCell key="cell" controlSize="small" continuous="YES" state="on" alignment="left" minValue="1" maxValue="5" doubleValue="2" allowsTickMarkValuesOnly="YES" tickMarkPosition="below" numberOfTickMarks="5" sliderType="linear" id="QG0-dO-6MW"/>
                         <connections>
                             <action selector="jiggleDistanceSliderChanged:" target="-2" id="8Np-4s-qkW"/>
                         </connections>

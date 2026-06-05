@@ -33,6 +33,47 @@ static NSString *JigglerOverlayVerticalPositionDefaultsKey = @"OverlayVerticalPo
 
 @implementation JigglerOverlayWindow
 
++ (NSImage *)jigglerOverlayMouseImageWithSize:(CGFloat)size
+{
+	SEL symbolSelector = NSSelectorFromString(@"imageWithSystemSymbolName:accessibilityDescription:");
+	if ([NSImage respondsToSelector:symbolSelector])
+	{
+		IMP imp = [NSImage methodForSelector:symbolSelector];
+		NSImage *(*symbolFactory)(id, SEL, NSString *, NSString *) = (void *)imp;
+		NSImage *symbolImage = symbolFactory([NSImage class], symbolSelector, @"computermouse.fill", @"Jiggler mouse overlay");
+
+		if (symbolImage)
+		{
+			NSImage *image = [[[NSImage alloc] initWithSize:NSMakeSize(size, size)] autorelease];
+			[image lockFocus];
+
+			[[NSColor colorWithCalibratedWhite:0.25 alpha:0.75] setFill];
+			NSBezierPath *backgroundPath = [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(10, 10, size - 20, size - 20)
+																			 xRadius:34
+																			 yRadius:34];
+			[backgroundPath fill];
+
+			NSRect drawRect = NSMakeRect(size * 0.27, size * 0.22, size * 0.46, size * 0.56);
+			NSImage *mouseImage = [[[NSImage alloc] initWithSize:NSMakeSize(size, size)] autorelease];
+			[mouseImage lockFocus];
+			[symbolImage drawInRect:drawRect fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0 respectFlipped:YES hints:nil];
+			[[NSColor colorWithCalibratedWhite:1.0 alpha:1.0] set];
+			NSRectFillUsingOperation(NSMakeRect(0, 0, size, size), NSCompositingOperationSourceAtop);
+			[mouseImage unlockFocus];
+
+			[mouseImage drawInRect:NSMakeRect(0, 0, size, size) fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0 respectFlipped:YES hints:nil];
+
+			[image unlockFocus];
+			[image setTemplate:NO];
+			return image;
+		}
+	}
+
+	return [NSImage imageNamed:@"NSApplicationIcon"];
+}
+
+
+
 + (void)activateOverlay
 {
 	JigglerOverlayWindow *sharedOverlay = [JigglerOverlayWindow sharedOverlayWindow];
@@ -147,9 +188,9 @@ static NSString *JigglerOverlayVerticalPositionDefaultsKey = @"OverlayVerticalPo
 	iconView = [[JigglerOverlayView alloc] initWithFrame:NSMakeRect(0, 0, contentRect.size.width, contentRect.size.height)];
 	[iconView setEditable:NO];
 	[iconView setImageAlignment:NSImageAlignCenter];
-	[iconView setImageFrameStyle:NSImageFrameGrayBezel];
+	[iconView setImageFrameStyle:NSImageFrameNone];
 	[iconView setImageScaling:NSImageScaleNone];
-	[iconView setImage:[NSImage imageNamed:@"NSApplicationIcon"]];
+	[iconView setImage:[JigglerOverlayWindow jigglerOverlayMouseImageWithSize:160.0]];
 	
 	// Make our icon view be our content view
 	[overlayWindow setContentView:iconView];
