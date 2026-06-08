@@ -53,7 +53,7 @@ Jiggler can automatically enable/disable based on:
 **Latest Release:** [Jiggler v1.13](https://github.com/panja0/Jiggler/releases/latest)
 
 
-### Important: First-Time Launch
+### ⚠️ Important: First-Time Launch
 
 **This app is unsigned**, so macOS Gatekeeper will block it on first launch.
 
